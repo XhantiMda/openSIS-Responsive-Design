@@ -30,6 +30,7 @@ error_reporting(0);
 
 include('RedirectRootInc.php');
 include("functions/ParamLibFnc.php");
+include('modules/actionframework/ActionFramework.php');
 $url = validateQueryString(curPageURL());
 if ($url === FALSE) {
     header('Location: index.php');

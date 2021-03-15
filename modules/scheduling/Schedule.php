@@ -49,6 +49,13 @@ if ($_REQUEST['modfunc'] == 'cp_insert') {
                 if ($res_sch[1]['RES'] > 0) {
                     DBQuery("INSERT INTO schedule(syear, school_id, student_id, start_date, end_date,modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped) SELECT syear, school_id, student_id, start_date, end_date, modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped FROM temp_schedule WHERE course_period_id =$val");
                     DBQuery("DROP TABLE IF EXISTS temp_schedule");
+
+                    //fetches the details of the recently created schedule
+                    $scheduleParams = DBQuery("SELECT syear, school_id, student_id, start_date, end_date, modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped  FROM temp_schedule WHERE course_period_id=$val");
+
+                    //invokes the action framework to send out a notification of the creation of the schedule
+                    ActionFramework::process("Schedule", "create", $scheduleParams);
+
                     unset($_SESSION['course_periods']);
                     unset($_SESSION['marking_period_id']);
                     unset($_REQUEST['selected_course_periods']);
@@ -57,9 +64,13 @@ if ($_REQUEST['modfunc'] == 'cp_insert') {
                     $parent_course[] = $val;
                 }
             } else {
-
-
                 DBQuery("INSERT INTO schedule(syear, school_id, student_id, start_date, end_date,modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped) SELECT syear, school_id, student_id, start_date, end_date, modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped FROM temp_schedule WHERE course_period_id=$val");
+                
+                //fetches the details of the recently created schedule
+                $scheduleParams = DBQuery("SELECT syear, school_id, student_id, start_date, end_date, modified_by, course_id, course_weight, course_period_id, mp, marking_period_id, scheduler_lock, dropped  FROM temp_schedule WHERE course_period_id=$val");
+
+                //invokes the action framework to send out a notification of the creation of the schedule
+                ActionFramework::process("Schedule", "create", $scheduleParams);
 
                 unset($_SESSION['course_periods']);
                 unset($_SESSION['marking_period_id']);
@@ -580,6 +591,13 @@ if ($_REQUEST['del'] == 'true') {
                     }
                     $sql = substr($sql, 0, -1) . ' WHERE STUDENT_ID=\'' . UserStudentID() . '\' AND COURSE_PERIOD_ID=\'' . $course_period_id . '\' AND START_DATE=\'' . date('Y-m-d', strtotime($start_date)) . '\'';
                     DBQuery($sql);
+
+                    //fetches the details of the recently updated schedule
+                    $updatePayload = DBQuery('SELECT * FROM schedule WHERE STUDENT_ID=\'' . UserStudentID() . '\' AND COURSE_PERIOD_ID=\'' . $course_period_id . '\' ORDER BY 1 DESC LIMIT 1');
+
+                    //invokes the action framework to send out a notification of the updated schedule
+                    ActionFramework::process("Schedule", "update", $updatePayload);
+
                     ########################### For Missing Attendance ###########################
                     ################################# Start of Filled seats update code ###############################
 

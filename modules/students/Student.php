@@ -740,6 +740,8 @@ if ($_REQUEST['action'] != 'delete' && $_REQUEST['action'] != 'delete_goal') {
                             if (!$error) {
                                 DBQuery($sql);
                                 $last_student_id = $_REQUEST[student_id];
+                                //invokes the action framework to send out a notification of the updated student
+                                $actionFrameworkResult = ActionFramework::process("Student", "update", $last_student_id);
 
                                 if ($_FILES['file']['name']) {
 
@@ -1190,6 +1192,8 @@ if ($_REQUEST['action'] != 'delete' && $_REQUEST['action'] != 'delete_goal') {
                             if ($un_chl_res != 'exist' && $pass_chl_res != 'exist' && $day_valid != false) {
                                 DBQuery($sql);
                                 $last_student_id = mysqli_insert_id($connection);
+                                //invokes the action framework to send out a notification of the recently created student
+                                $actionFrameworkResult = ActionFramework::process("Student", "create", $last_student_id);
 //                                if ($_FILES['file']['name']) {
 //                                    $target_path = $StudentPicturesPath . '/' . $last_student_id . '.JPG';
 //                                    $destination_path = $StudentPicturesPath;
