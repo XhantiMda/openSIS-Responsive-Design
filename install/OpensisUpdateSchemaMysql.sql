@@ -281,7 +281,7 @@ CREATE TABLE courses (
     school_id numeric NOT NULL,
     grade_level numeric,
     title character varying(100),
-    short_name character varying(25),
+    short_name character varying(50),
     rollover_id numeric
 )ENGINE=InnoDB;
 
