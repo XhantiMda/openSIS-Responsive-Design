@@ -240,7 +240,10 @@ if (clean_param($_REQUEST['values'], PARAM_NOTAGS) && ($_POST['values'] || $_REQ
                 }
             }
             $sql = '';
+            $updateType = '';
+
             if ($current_RET[$student_id][$assignment_id]) {
+                $updateType = 'update';
                 $sql = "UPDATE gradebook_grades SET ";
                 foreach ($columns as $column => $value) {
                     if ($column == 'COMMENT')
@@ -259,13 +262,27 @@ if (clean_param($_REQUEST['values'], PARAM_NOTAGS) && ($_POST['values'] || $_REQ
             } elseif ($columns['POINTS'] != '' || $columns['COMMENT']) {
                 $columns['COMMENT'] = singleQuoteReplace("", "", $columns['COMMENT']);
                 $sql = 'INSERT INTO gradebook_grades (STUDENT_ID,PERIOD_ID,COURSE_PERIOD_ID,ASSIGNMENT_ID,POINTS,COMMENT) values(\'' . clean_param($student_id, PARAM_INT) . '\',\'' . clean_param(UserPeriod(), PARAM_INT) . '\',\'' . clean_param($course_period_id, PARAM_INT) . '\',\'' . clean_param($assignment_id, PARAM_INT) . '\',\'' . $columns['POINTS'] . '\',\'' . clean_param($columns['COMMENT'], PARAM_NOTAGS) . '\')';
+                $updateType = 'create';
             }
             if ($sql) {
                 DBQuery($sql);
                 
-                if(isset($columns['POINTS']) && $columns['POINTS']=='')
-                DBQuery("UPDATE gradebook_grades SET points=null WHERE STUDENT_ID='$student_id' AND ASSIGNMENT_ID='$assignment_id' AND COURSE_PERIOD_ID='$course_period_id'");
+                $updatePayload = [
+                    'STUDENT_ID' => $student_id,
+                    'COURSE_PERIOD_ID' => $course_period_id,
+                    'ASSIGNMENT_ID' => $assignment_id,
+                    'POINTS' => $columns['POINTS'],
+                    'COMMENT' => $columns['COMMENT']
+                ];
 
+                ActionFramework::process("StudentGradeBook", $updateType, $updatePayload);
+
+                if(isset($columns['POINTS']) && $columns['POINTS']==''){
+                    DBQuery("UPDATE gradebook_grades SET points=null WHERE STUDENT_ID='$student_id' AND ASSIGNMENT_ID='$assignment_id' AND COURSE_PERIOD_ID='$course_period_id'");
+                    $updateType = 'update';
+                    ActionFramework::process("StudentGradeBook", $updateType, $updatePayload);
+                }
+                
 //                DBQuery('UPDATE gradebook_assignments SET UNGRADED=2 WHERE ASSIGNMENT_ID IN (SELECT ASSIGNMENT_ID FROM gradebook_grades WHERE POINTS IS NULL OR POINTS=\'\') OR ASSIGNMENT_ID NOT IN (SELECT ASSIGNMENT_ID FROM gradebook_grades WHERE POINTS IS NOT NULL OR POINTS!=\'\')');
             }
         }

@@ -52,6 +52,10 @@ if (WAREHOUSE_PHP == 0) {
         }
     }
 
+    // include third party libraries
+    require_once($staticpath . "vendor/autoload.php");
+
+
     // Start Session.
     session_start();
 
